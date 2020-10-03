@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>visual</title>
+    <link rel="stylesheet" href="color.css">
+  </head>
+  <body>
+    <center>
+      <canvas id="MyCanvas" width="360px" height="180px"></canvas><br>
+      <input type="digit" id="day" placeholder="days(since 2000-06-01)">
+      <input type="digit" id="daycount" placeholder="extra days">
+      <input type="digit" id="FPS"  placeholder="FPS"><br>
+      <button onclick="multiget(document.getElementById('day').value,document.getElementById('daycount').value,document.getElementById('FPS').value)">Show</button>
+    </center>
+    <script>
+      const c = document.getElementById("MyCanvas");
+      const ctx = c.getContext("2d");
+      var img = new Image;
+      img.src = "./world.bmp";
+      img.onload = function(){
+        ctx.drawImage(img,0,0); // Or at whatever offset you like
+      };
+      async function multiget(mag,daycount,fps){
+        let options = {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({day:mag,moreDays:daycount}) //converts to json the data to send
+        };
+        alert("Getting data");
+        const responce  = await fetch('/apiMulti',options);
+        alert("Got the data");
+        for(let val = 0; val <= daycount - mag ; val++){
+          if(val == 292 ) continue;
+          img = new Image; //create new image
+          img.src = `./${val}.png`; //sets the image
+          img.onload = async function(){
+            ctx.drawImage(img,0,0);
+          };
+          await delay(1000/fps)
+        }
+        await fetch("/delete");
+      }
+      function delay(ms){return new Promise(resolve => setTimeout(resolve, ms));}
+      async function predict(lat,lon,cont){
+        let options = {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({latitude:lat,longitude:lon,continent:cont}) //converts to json the data to send
+        };
+        alert("getting multi values takes time please wait");
+        const responce = await fetch('/predict',options);
+        let data = await responce.json();
+        alert("got em all");
+        document.getElementById('intensity').value = data.intense;
+        document.getElementById('plausibility').value = data.chance;
+      }
+    </script>
+  </body>
+</html>
